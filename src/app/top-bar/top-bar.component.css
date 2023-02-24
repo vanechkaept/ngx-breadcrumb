@@ -1,9 +1,16 @@
 .breadcrumb {
   display: flex;
-  flex-wrap: wrap;
   overflow: hidden;
+  flex-direction: row;
 }
 
+.breadcrumb > div {
+  display: block;
+  white-space: nowrap;
+  /* padding-left: 15px; */
+  border-right: 10px solid red;
+}
+/* 
 .breadcrumb.flexible {
   flex-wrap: nowrap;
   overflow-x: auto;
@@ -19,4 +26,4 @@
 
 .hidden {
   display: none;
-}
+} */

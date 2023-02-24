@@ -32,6 +32,8 @@ export class BreadcrumbComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('breadcrumbContainer', { static: false })
   breadcrumbContainer: ElementRef;
 
+  elementInMenu: HTMLElement[] = [];
+
   breadcrumbsList$ = new Observable<Breadcrumb[]>();
 
   private resizeSubscription: Subscription;
@@ -47,38 +49,56 @@ export class BreadcrumbComponent implements OnInit, OnDestroy, AfterViewInit {
     this.breadcrumbsList$ = this._width$.pipe(
       debounceTime(100),
       startWith(1000),
-      map((width: number) => this._checkFitting(width)),
+      map((width: number) => this._checkFitting(width, BR)),
       distinctUntilChanged()
     );
   }
 
-  private _checkFitting(width: number) {
+  private _checkFitting(width: number, breadcrumb: Breadcrumb[]) {
     console.log(width);
     const breadcrumbLinks: HTMLElement[] = Array.from(
       this.breadcrumbContainer?.nativeElement.querySelectorAll('a') || []
     );
     // console.log('breadcrumbLinks', breadcrumbLinks);
 
-    const currentLink: HTMLElement[] = breadcrumbLinks.splice(-1);
-    const homeLink: HTMLElement[] = breadcrumbLinks.splice(1, 1);
+    const currentLink: HTMLElement = breadcrumbLinks.splice(-1)[0];
+    const homeLink: HTMLElement = breadcrumbLinks.splice(0, 1)[0];
     // console.log('currentLink', currentLink);
     // console.log('homeLink', homeLink);
     // console.log('breadcrumbLinks 2', breadcrumbLinks);
-
+    // parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
     let allWidth: number =
-      currentLink[0]?.offsetWidth + homeLink[0]?.offsetWidth;
+      this._getWidthOfElement(currentLink) + this._getWidthOfElement(homeLink);
 
-    const notFit: any[] = [];
+    // for (let link of this._notFit) {
+    // this.breadcrumbContainer?.nativeElement.appendChild(link);
+    // }
+
+    // this._notFit = [];
     for (let link of breadcrumbLinks) {
-      if (allWidth + link.offsetWidth > width) {
-        notFit.push(link);
+      allWidth += this._getWidthOfElement(link);
+      if (allWidth > width) {
+        this.elementInMenu.push(link);
+        // link.remove();
       }
-      allWidth += link.offsetWidth;
     }
 
-    console.log(notFit);
+    console.log(this.elementInMenu);
 
     return BR;
+  }
+
+  private _getWidthOfElement(el: HTMLElement): number {
+    if (!el) return 0;
+    return el.offsetWidth;
+    // const style = el?.currentStyle || window.getComputedStyle(el),
+    //   width = el.offsetWidth, // or use style.width
+    //   margin = parseFloat(style.marginLeft) + parseFloat(style.marginRight),
+    //   padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight),
+    //   border =
+    //     parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth);
+
+    // return width + margin - padding + border;
   }
 
   ngAfterViewInit(): void {
@@ -134,6 +154,11 @@ const BR: Breadcrumb[] = [
   {
     label: '4 four ',
     url: '4',
+    isHidden: false,
+  },
+  {
+    label: '5 five ',
+    url: '5',
     isHidden: false,
   },
 ];
