@@ -1,0 +1,8 @@
+<nav (resized)="onResized($event)">
+  as
+  <div #breadcrumbContainer class="breadcrumb">
+    <div *ngFor="let breadcrumb of breadcrumbsList$ | async">
+      <a [href]="breadcrumb.url">{{ breadcrumb.label }}</a>
+    </div>
+  </div>
+</nav>

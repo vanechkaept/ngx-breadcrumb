@@ -1,0 +1,22 @@
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+
+.breadcrumb.flexible {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.breadcrumb-item {
+  padding: 0 10px;
+  background-color: rgba(8, 8, 8, 0.158);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hidden {
+  display: none;
+}
