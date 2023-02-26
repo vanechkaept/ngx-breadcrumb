@@ -6,6 +6,11 @@ import {
   ViewChild,
   ElementRef,
   AfterViewInit,
+  ChangeDetectorRef,
+  QueryList,
+  TemplateRef,
+  ViewChildren,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { Subscription, fromEvent, BehaviorSubject, Observable } from 'rxjs';
 import {
@@ -13,24 +18,30 @@ import {
   distinctUntilChanged,
   map,
   startWith,
+  tap,
 } from 'rxjs/operators';
 
 interface Breadcrumb {
   label: string;
   url: string;
   isHidden?: boolean;
+  el?: ElementRef;
 }
 
 @Component({
   selector: 'app-breadcrumb',
   templateUrl: './top-bar.component.html',
   styleUrls: ['./top-bar.component.css'],
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class BreadcrumbComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() breadcrumbLinks = BR;
 
   @ViewChild('breadcrumbContainer', { static: false })
   breadcrumbContainer: ElementRef;
+
+  @ViewChildren('breadcrumbs')
+  breadcrumbsEl!: QueryList<ElementRef>;
 
   elementInMenu: HTMLElement[] = [];
 
@@ -43,49 +54,54 @@ export class BreadcrumbComponent implements OnInit, OnDestroy, AfterViewInit {
     this._width$.next(entries[0].contentRect.width);
   });
 
-  constructor() {}
+  constructor(private _cd: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.breadcrumbsList$ = this._width$.pipe(
       debounceTime(100),
       startWith(1000),
       map((width: number) => this._checkFitting(width, BR)),
-      distinctUntilChanged()
+      // distinctUntilChanged(),
+      tap((_) => {
+        setTimeout(() => this._cd.detectChanges());
+      })
     );
   }
 
   private _checkFitting(width: number, breadcrumb: Breadcrumb[]) {
     console.log(width);
-    const breadcrumbLinks: HTMLElement[] = Array.from(
-      this.breadcrumbContainer?.nativeElement.querySelectorAll('a') || []
-    );
-    // console.log('breadcrumbLinks', breadcrumbLinks);
-
-    const currentLink: HTMLElement = breadcrumbLinks.splice(-1)[0];
-    const homeLink: HTMLElement = breadcrumbLinks.splice(0, 1)[0];
-    // console.log('currentLink', currentLink);
-    // console.log('homeLink', homeLink);
-    // console.log('breadcrumbLinks 2', breadcrumbLinks);
-    // parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
-    let allWidth: number =
-      this._getWidthOfElement(currentLink) + this._getWidthOfElement(homeLink);
-
-    // for (let link of this._notFit) {
-    // this.breadcrumbContainer?.nativeElement.appendChild(link);
+    console.log(this.breadcrumbsEl?.toArray());
+    const breadcrumbLinks: ElementRef[] = this.breadcrumbsEl?.toArray() || [];
+    console.log('breadcrumbLinks', breadcrumbLinks);
+    // if (breadcrumb.length !== breadcrumbLinks.length) {
+    //   return breadcrumb;
     // }
 
-    // this._notFit = [];
-    for (let link of breadcrumbLinks) {
-      allWidth += this._getWidthOfElement(link);
-      if (allWidth > width) {
-        this.elementInMenu.push(link);
-        // link.remove();
-      }
+    breadcrumb.forEach((b, i) => {
+      b.el = breadcrumbLinks[i];
+    });
+    console.log('breadcrumb', breadcrumb);
+
+    const currentLink: Breadcrumb = breadcrumb.concat().splice(-1)[0];
+    const homeLink: Breadcrumb = breadcrumb.concat().splice(0, 1)[0];
+    let allWidth: number =
+      this._getWidthOfElement(currentLink?.el?.nativeElement) +
+      this._getWidthOfElement(homeLink?.el?.nativeElement);
+
+    for (let br of breadcrumb) {
+      allWidth += this._getWidthOfElement(br?.el?.nativeElement);
+      br.isHidden = allWidth > width;
     }
 
-    console.log(this.elementInMenu);
+    // breadcrumb.push(currentLink);
+    // breadcrumb.unshift(homeLink);
 
-    return BR;
+    console.log(
+      'result',
+      breadcrumb.map((c) => c.isHidden)
+    );
+
+    return breadcrumb;
   }
 
   private _getWidthOfElement(el: HTMLElement): number {
@@ -154,7 +170,7 @@ const BR: Breadcrumb[] = [
   {
     label: '4 four ',
     url: '4',
-    isHidden: false,
+    isHidden: true,
   },
   {
     label: '5 five ',

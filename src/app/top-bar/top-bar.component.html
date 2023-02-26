@@ -2,7 +2,14 @@
   as
   <div #breadcrumbContainer class="breadcrumb">
     <div *ngFor="let breadcrumb of breadcrumbsList$ | async">
-      <a [href]="breadcrumb.url">{{ breadcrumb.label }}</a>
+      <a
+        #breadcrumbs
+        [href]="breadcrumb.url"
+        *ngIf="breadcrumb.isHidden !== true"
+      >
+        {{ breadcrumb.label }}
+        {{ breadcrumb.isHidden }}
+      </a>
     </div>
   </div>
 </nav>
